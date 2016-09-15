@@ -18,32 +18,23 @@ class Arrays
      * Checks if the given key exists in the array by a string representation
      *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
-     * @param array $array <p>The array. This array is passed by reference</p>
+     * @param array $array <p>The array</p>
      *
      * @return bool returns true if key is exists, false otherwise
      */
-    public static function exists($key, &$array)
+    public static function exists($key, $array)
     {
         if (!is_array($array)) {
             return false;
         }
         if ($key == '') {
-            return isset($array[$key]);
+            return is_array($array) && array_key_exists((string)$key, $array);
         }
-        $output = false;
-        $cntEBrackets = 0;
-        $splitStr = [];
-        $isBroken = self::parseAndValidateKeys($key, $splitStr, $cntEBrackets);
-        if ($isBroken || $cntEBrackets) {
+        $parseInfo = self::parseAndValidateKeys($key);
+        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
             return false;
         }
-        $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
-        $prevEl = '';
-        if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
-            $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
-        }
-        eval('$output=((isset($array' . $evalStr . ') && is_array($array' . $prevEl . ')))?true:false;');
-        return $output;
+        return eval('return (is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . '))?true:false;');
     }
 
     /**
@@ -68,19 +59,26 @@ class Arrays
             $array[] = $value;
             return true;
         }
-        $cntEBrackets = 0;
-        $splitStr = [];
-        $isBroken = self::parseAndValidateKeys($key, $splitStr, $cntEBrackets);
-        if ($isBroken) {
+        $parseInfo = self::parseAndValidateKeys($key);
+        if ($parseInfo['isBroken']) {
             return false;
         }
         $append = preg_match('/\[\]$/', $key);
-        if (($append && $cntEBrackets === 1) || (!$append && $cntEBrackets === 0)) {
+        if (($append && $parseInfo['cntEBrackets'] === 1) || (!$append && $parseInfo['cntEBrackets'] === 0)) {
             $evalStr = '';
-            foreach ($splitStr as $el) {
+            $next = false;
+            foreach ($parseInfo['splitStr'] as $el) {
                 $return = false;
+                $prevEl = $evalStr;
                 $evalStr .= '[\'' . $el . '\']';
-                eval('$return=isset($array' . $evalStr . ') && !is_array($array' . $evalStr . ');');
+                if ($next) {
+                    continue;
+                }
+                $next = eval('return !array_key_exists(\'' . $el . '\',$array' . $prevEl . ');');
+                if ($next) {
+                    continue;
+                }
+                $next = eval('return !is_array($array' . $evalStr . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $prevEl . ');');
                 if ($return) {
                     return false;
                 }
@@ -111,39 +109,31 @@ class Arrays
         if ($key === '[]') {
             return false;
         }
-        $cntEBrackets = 0;
-        $splitStr = [];
-        $isBroken = self::parseAndValidateKeys($key, $splitStr, $cntEBrackets);
-        if ($isBroken || $cntEBrackets) {
+        $parseInfo = self::parseAndValidateKeys($key);
+        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
             return false;
         }
-        $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
-        $prevEl = '';
-        if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
-            $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
-        }
-        $output = false;
-        eval('if((isset($array' . $evalStr . ') && is_array($array' . $prevEl . '))){unset($array' . $evalStr . ');$output=true;}else{$output=false;}');
-        return $output;
+        $evalStr = self::getKeyStringForEval($parseInfo);
+        return eval('if(is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . ')){unset($array' . $evalStr . ');return true;}else{return false;}');
     }
 
     /**
      * Get element of the array by a string representation
      *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
-     * @param array $array <p>The array. This array is passed by reference</p>
+     * @param array $array <p>The array</p>
      * @param string $default [optional] <p>Default value if key not exist, default: null</p>
      * @param bool $ignoreString [optional] <p>Ignore string element as array, get only element, default: true</p>
      *
      * @return mixed returns value by a key, or default value otherwise
      */
-    public static function get($key, &$array, $default = null, $ignoreString = true)
+    public static function get($key, $array, $default = null, $ignoreString = true)
     {
         if (!is_array($array)) {
             return $default;
         }
         if ($key == '') {
-            if (!isset($array[$key])) {
+            if (!array_key_exists((string)$key, $array) || !is_array($array)) {
                 return $default;
             }
             return $array[$key];
@@ -151,36 +141,47 @@ class Arrays
         if ($key === '[]') {
             return $default;
         }
-        $output = $default;
-        $cntEBrackets = 0;
-        $splitStr = [];
-        $isBroken = self::parseAndValidateKeys($key, $splitStr, $cntEBrackets);
-        if ($isBroken || $cntEBrackets) {
+        $parseInfo = self::parseAndValidateKeys($key);
+        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
             return $default;
         }
-        $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
-        $prevEl = '';
+        $evalStr = self::getKeyStringForEval($parseInfo);
         if ($ignoreString) {
-            if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
-                $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
-            }
-            eval('$output=(isset($array' . $evalStr . ') && is_array($array' . $prevEl . '))?$array' . $evalStr . ':$default;');
-        } else {
-            eval('$output=(isset($array' . $evalStr . ') && (is_array($array' . $prevEl . ') || is_string($array' . $prevEl . ')))?$array' . $evalStr . ':$default;');
+            return eval('return (is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . '))?$array' . $evalStr . ':$default;');
         }
-        return $output;
+        return eval('return ((is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . ')) || is_string($array' . $parseInfo['prevEl'] . '))?$array' . $evalStr . ':$default;');
     }
 
-    private static function parseAndValidateKeys($key, &$splitStr, &$cntEBrackets)
+    private static function getKeyStringForEval($parseInfo)
     {
-        return preg_replace_callback(array('/(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])/'),
-            function ($m) use (&$splitStr, &$cntEBrackets) {
+        return '[\'' . implode('\'][\'', $parseInfo['splitStr']) . '\']';
+    }
+
+    private static function parseAndValidateKeys($key)
+    {
+        $splitStr = [];
+        $cntEBrackets = 0;
+        $endKey = '';
+        $prevEl = '';
+        $isBroken = (bool)preg_replace_callback(array('/(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])/'),
+            function ($m) use (&$splitStr, &$cntEBrackets, &$endKey) {
                 if ($m[0] == '[]') {
                     $cntEBrackets++;
                     return '';
                 }
-                $splitStr[] = str_replace("'", "\\'", $m['el']);
+                $splitStr[] = $endKey = str_replace("'", "\\'", $m['el']);
                 return '';
             }, $key);
+
+        if (($cntEl = count($splitStr)) > 1) {
+            $prevEl = '[\'' . implode('\'][\'', array_slice($splitStr, 0, $cntEl - 1)) . '\']';
+        }
+        return [
+            'isBroken' => $isBroken,
+            'cntEBrackets' => $cntEBrackets,
+            'endKey' => $endKey,
+            'splitStr' => $splitStr,
+            'prevEl' => $prevEl
+        ];
     }
 }

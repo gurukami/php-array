@@ -29,13 +29,16 @@ class ArraysTest extends \TestSuite
                 'k2' => [
                     '0'
                 ]
-            ]
+            ],
+            3 => null
         ];
 
         $emptyArray = [];
+        $nullArray = ['' => null];
         $string = 'string';
 
         // Empty key, '' == null
+        $this->assertTrue(Arrays::exists('', $nullArray));
         $this->assertTrue(Arrays::exists('', $array));
         $this->assertTrue(Arrays::exists('[""]', $array));
         $this->assertTrue(Arrays::exists('2[""]', $array));

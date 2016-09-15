@@ -13,7 +13,7 @@ Namespace Gurukami\Helpers
 
 **Exists** (Checks if the given key exists in the array by a string representation)
 
-Arrays::exists($key, &$array)
+Arrays::exists($key, $array)
 
 ```php
 <?php
@@ -102,7 +102,7 @@ Arrays::delete('["complex_[name]_!@#$&%*^"]', $data); // returns: true, delete e
 
 **Get** (Get element of the array by a string representation)
 
-Arrays::get($key, &$array, $default = null, $ignoreString = true)
+Arrays::get($key, $array, $default = null, $ignoreString = true)
 
 ```php
 <?php
