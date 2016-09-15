@@ -95,7 +95,7 @@ Arrays::delete('k0', $data); // returns: true, delete element from array
 Arrays::delete('k9', $data); // returns: false
 
 Arrays::delete('[k1][k1-1]', $data); // returns: true, delete element from array
-Arrays::delete('[k1][k1-2]', $data); // returns: false, delete element from array
+Arrays::delete('[k1][k1-2]', $data); // returns: false
 
 Arrays::delete('["complex_[name]_!@#$&%*^"]', $data); // returns: true, delete element from array
 ```
@@ -132,7 +132,7 @@ Arrays::get('[k2][2]', $data); // returns: null, key isn't exists in array
 
 // If you want get a symbol from string value, you may switch off option $ignoreString = false
 Arrays::get('[k2][2]', $data, null, false); // returns: 'r'
-Arrays::get('[k2][null]', $data, null, false); // returns: null, key isn't exists in array
+Arrays::get('[k2][null]', $data, null, false); // returns: null, offset isn't exists in string
 ```
 
 ## Behaviors
