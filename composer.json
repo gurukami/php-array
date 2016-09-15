@@ -1,0 +1,23 @@
+{
+  "name": "gurukami/php-array",
+  "type": "library",
+  "description": "Simple & secure helper to manipulate arrays in various ways",
+  "keywords": ["php","helpers","array","gurukami"],
+  "homepage": "http://gurukami.com",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ilya Krasheninnikov",
+      "email": "i.krasheninnikov@gurukami.com",
+      "role": "Founder and project lead"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0"
+  },
+  "autoload": {
+    "psr-4" : {
+      "Gurukami\\Helpers\\" : "src/"
+    }
+  }
+}
