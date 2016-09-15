@@ -39,7 +39,7 @@ class Arrays
         }
         $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
         $prevEl = '';
-        if (($strPosPrev = strrpos($evalStr, "']['")) !== false) {
+        if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
             $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
         }
         eval('$output=((isset($array' . $evalStr . ') && is_array($array' . $prevEl . ')))?true:false;');
@@ -119,7 +119,7 @@ class Arrays
         }
         $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
         $prevEl = '';
-        if (($strPosPrev = strrpos($evalStr, "']['")) !== false) {
+        if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
             $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
         }
         $output = false;
@@ -161,7 +161,7 @@ class Arrays
         $evalStr = '[\'' . implode('\'][\'', $splitStr) . '\']';
         $prevEl = '';
         if ($ignoreString) {
-            if (($strPosPrev = strrpos($evalStr, "']['")) !== false) {
+            if (($strPosPrev = mb_strpos($evalStr, "']['")) !== false) {
                 $prevEl = mb_substr($evalStr, 0, $strPosPrev + 2);
             }
             eval('$output=(isset($array' . $evalStr . ') && is_array($array' . $prevEl . '))?$array' . $evalStr . ':$default;');
