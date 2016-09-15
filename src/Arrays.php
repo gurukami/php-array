@@ -30,11 +30,7 @@ class Arrays
         if ($key == '') {
             return is_array($array) && array_key_exists((string)$key, $array);
         }
-        $parseInfo = self::parseAndValidateKeys($key);
-        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
-            return false;
-        }
-        return eval('return (is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . '))?true:false;');
+        return self::parseAndValidateKeys($key, $array)['isExists'];
     }
 
     /**
@@ -59,34 +55,12 @@ class Arrays
             $array[] = $value;
             return true;
         }
-        $parseInfo = self::parseAndValidateKeys($key);
-        if ($parseInfo['isBroken']) {
-            return false;
+        $parseInfo = self::parseAndValidateKeys($key, $array, 'save');
+        if ($parseInfo['completed']) {
+            $evalStr = self::getKeyStringForEval($parseInfo);
+            eval(((!$parseInfo['append']) ? 'unset($array' . $evalStr . ');' : '') . '$array' . $evalStr . (($parseInfo['append']) ? '[]' : '') . '=$value;');
         }
-        $append = preg_match('/\[\]$/', $key);
-        if (($append && $parseInfo['cntEBrackets'] === 1) || (!$append && $parseInfo['cntEBrackets'] === 0)) {
-            $evalStr = '';
-            $next = false;
-            foreach ($parseInfo['splitStr'] as $el) {
-                $return = false;
-                $prevEl = $evalStr;
-                $evalStr .= '[\'' . $el . '\']';
-                if ($next) {
-                    continue;
-                }
-                $next = eval('return !array_key_exists(\'' . $el . '\',$array' . $prevEl . ');');
-                if ($next) {
-                    continue;
-                }
-                $next = eval('return !is_array($array' . $evalStr . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $prevEl . ');');
-                if ($return) {
-                    return false;
-                }
-            }
-            eval(((!$append) ? 'unset($array' . $evalStr . ');' : '') . '$array' . $evalStr . (($append) ? '[]' : '') . '=$value;');
-            return true;
-        }
-        return false;
+        return $parseInfo['completed'];
     }
 
     /**
@@ -109,12 +83,7 @@ class Arrays
         if ($key === '[]') {
             return false;
         }
-        $parseInfo = self::parseAndValidateKeys($key);
-        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
-            return false;
-        }
-        $evalStr = self::getKeyStringForEval($parseInfo);
-        return eval('if(is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . ')){unset($array' . $evalStr . ');return true;}else{return false;}');
+        return self::parseAndValidateKeys($key, $array, 'delete')['completed'];
     }
 
     /**
@@ -141,47 +110,85 @@ class Arrays
         if ($key === '[]') {
             return $default;
         }
-        $parseInfo = self::parseAndValidateKeys($key);
-        if ($parseInfo['isBroken'] || $parseInfo['cntEBrackets']) {
-            return $default;
-        }
-        $evalStr = self::getKeyStringForEval($parseInfo);
+        $parseInfo = self::parseAndValidateKeys($key, $array, 'get');
         if ($ignoreString) {
-            return eval('return (is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . '))?$array' . $evalStr . ':$default;');
+            return (!$parseInfo['isString'] && $parseInfo['completed']) ? $parseInfo['value'] : $default;
         }
-        return eval('return ((is_array($array' . $parseInfo['prevEl'] . ') && array_key_exists(\'' . $parseInfo['endKey'] . '\',$array' . $parseInfo['prevEl'] . ')) || is_string($array' . $parseInfo['prevEl'] . '))?$array' . $evalStr . ':$default;');
+        return ($parseInfo['completed'] && ($parseInfo['isExists'] || $parseInfo['isString'])) ? $parseInfo['value'] : $default;
     }
 
     private static function getKeyStringForEval($parseInfo)
     {
-        return '[\'' . implode('\'][\'', $parseInfo['splitStr']) . '\']';
+        return '[\'' . implode('\'][\'', $parseInfo['keys']) . '\']';
     }
 
-    private static function parseAndValidateKeys($key)
+    private static function parseAndValidateKeys($key, &$array = null, $mode = 'exists')
     {
-        $splitStr = [];
-        $cntEBrackets = 0;
-        $endKey = '';
-        $prevEl = '';
-        $isBroken = (bool)preg_replace_callback(array('/(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])/'),
-            function ($m) use (&$splitStr, &$cntEBrackets, &$endKey) {
+        $parseInfo = [
+            'keys' => [],
+            'lastKey' => '',
+            'prevEl' => &$array,
+            'currEl' => &$array,
+            'isExists' => null,
+            'cntEBrackets' => 0,
+            'isString' => false,
+            'completed' => false,
+            'first' => true,
+            'append' => false,
+            'value' => null
+        ];
+        $parseInfo['isBroken'] = (bool)preg_replace_callback(array('/(?J:\[([\'"])(?<el>.*?)\1\]|(?<el>\]?[^\[]+)|\[(?<el>(?:[^\[\]]+|(?R))*)\])/'),
+            function ($m) use (&$parseInfo, &$array) {
                 if ($m[0] == '[]') {
-                    $cntEBrackets++;
+                    $parseInfo['isExists'] = false;
+                    $parseInfo['cntEBrackets']++;
+                    $parseInfo['append'] = $parseInfo['cntEBrackets'] == 1;
                     return '';
                 }
-                $splitStr[] = $endKey = str_replace("'", "\\'", $m['el']);
+                $parseInfo['append'] = false;
+                if ($parseInfo['isExists'] !== false) {
+                    if (!is_array($parseInfo['currEl'])) {
+                        $parseInfo['isExists'] = false;
+                        $parseInfo['lastKey'] = $m['el'];
+                        return '';
+                    }
+                    if (($parseInfo['isExists'] = array_key_exists((string)$m['el'],
+                            $parseInfo['currEl']) && is_array($parseInfo['currEl']))
+                    ) {
+                        if (!$parseInfo['first']) {
+                            $parseInfo['prevEl'] = &$parseInfo['currEl'];
+                        }
+                        $parseInfo['currEl'] = &$array[$m['el']];
+                        $parseInfo['lastKey'] = $m['el'];
+                        $parseInfo['first'] = false;
+                    }
+                }
+                $parseInfo['keys'][] = str_replace("'", "\\'", $m['el']);
                 return '';
             }, $key);
-
-        if (($cntEl = count($splitStr)) > 1) {
-            $prevEl = '[\'' . implode('\'][\'', array_slice($splitStr, 0, $cntEl - 1)) . '\']';
+        if ($parseInfo['isExists'] === false && is_array($parseInfo['prevEl']) && is_string($parseInfo['currEl'])) {
+            $parseInfo['isString'] = true;
+            if ($mode == 'get' && isset($parseInfo['currEl'][$parseInfo['lastKey']])) {
+                $parseInfo['completed'] = true;
+                $parseInfo['value'] = $parseInfo['currEl'][$parseInfo['lastKey']];
+            }
         }
-        return [
-            'isBroken' => $isBroken,
-            'cntEBrackets' => $cntEBrackets,
-            'endKey' => $endKey,
-            'splitStr' => $splitStr,
-            'prevEl' => $prevEl
-        ];
+        if ($mode == 'get' && $parseInfo['isExists']) {
+            $parseInfo['completed'] = true;
+            $parseInfo['value'] = $parseInfo['prevEl'][$parseInfo['lastKey']];
+        }
+        if ($mode == 'delete' && $parseInfo['isExists']) {
+            unset($parseInfo['prevEl'][$parseInfo['lastKey']]);
+            $parseInfo['completed'] = true;
+        }
+        if ($mode == 'save') {
+            if (!$parseInfo['isExists'] && is_array($parseInfo['prevEl']) && $parseInfo['cntEBrackets'] <= 1) {
+                $parseInfo['completed'] = true;
+            }
+        }
+        if ($parseInfo['isBroken']) {
+            $parseInfo['completed'] = false;
+        }
+        return $parseInfo;
     }
 }
