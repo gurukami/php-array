@@ -57,8 +57,18 @@ class Arrays
         }
         $parseInfo = self::parseAndValidateKeys($key, $array, 'save');
         if ($parseInfo['completed']) {
-            $evalStr = self::getKeyStringForEval($parseInfo);
-            eval(((!$parseInfo['append']) ? 'unset($array' . $evalStr . ');' : '') . '$array' . $evalStr . (($parseInfo['append']) ? '[]' : '') . '=$value;');
+            $currEl = &$array;
+            foreach ($parseInfo['keys'] as $key) {
+                if (!array_key_exists((string)$key, (array)$currEl)) {
+                    $mCurSource[$key] = [];
+                }
+                $currEl = &$currEl[$key];
+            }
+            if ($parseInfo['append']) {
+                $currEl[] = $value;
+            } else {
+                $currEl = $value;
+            }
         }
         return $parseInfo['completed'];
     }
@@ -117,11 +127,6 @@ class Arrays
         return ($parseInfo['completed'] && ($parseInfo['isExists'] || $parseInfo['isString'])) ? $parseInfo['value'] : $default;
     }
 
-    private static function getKeyStringForEval($parseInfo)
-    {
-        return '[\'' . implode('\'][\'', $parseInfo['keys']) . '\']';
-    }
-
     private static function parseAndValidateKeys($key, &$array = null, $mode = 'exists')
     {
         $parseInfo = [
@@ -163,7 +168,7 @@ class Arrays
                         $parseInfo['first'] = false;
                     }
                 }
-                $parseInfo['keys'][] = str_replace("'", "\\'", $m['el']);
+                $parseInfo['keys'][] = $m['el'];
                 return '';
             }, $key);
         if ($parseInfo['isExists'] === false && is_array($parseInfo['prevEl']) && is_string($parseInfo['currEl'])) {
