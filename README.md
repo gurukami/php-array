@@ -1,4 +1,4 @@
-# Array Helper
+# Array helper
 
 [![Latest Stable Version](https://poser.pugx.org/gurukami/php-array/v/stable.png)](https://packagist.org/packages/gurukami/php-array)
 [![Total Downloads](https://poser.pugx.org/gurukami/php-array/downloads.png)](https://packagist.org/packages/gurukami/php-array)
@@ -7,9 +7,9 @@
 
 Simple & secure helper to manipulate arrays in various ways, released under the MIT license.
 
-Namespace Gurukami\Helpers
-
 ## Usage
+
+Namespace Gurukami\Helpers
 
 **Exists** (Checks if the given key exists in the array by a string representation)
 

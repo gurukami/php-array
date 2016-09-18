@@ -322,7 +322,15 @@ class ArraysTest extends \TestSuite
         $array = [];
         $this->assertTrue(Arrays::save('"unknown\'', $array, 'unknown'));
         $this->assertEquals('unknown', $array['"unknown\'']);
-
+        
+        // Replace value
+        $array = [];
+        $this->assertTrue(Arrays::save('inc', $array, '1'));
+        $this->assertEquals('1', $array['inc']);
+        $this->assertTrue(Arrays::save('inc', $array, '2'));
+        $this->assertEquals('2', $array['inc']);
+        $this->assertFalse(Arrays::save('inc[2]', $array, '2'));
+        $this->assertEquals('2', $array['inc']);
     }
 
     /**

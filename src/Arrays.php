@@ -187,7 +187,7 @@ class Arrays
             $parseInfo['completed'] = true;
         }
         if ($mode == 'save') {
-            if (!$parseInfo['isExists'] && is_array($parseInfo['prevEl']) && $parseInfo['cntEBrackets'] <= 1) {
+            if (!$parseInfo['isString'] && is_array($parseInfo['prevEl']) && $parseInfo['cntEBrackets'] <= 1) {
                 $parseInfo['completed'] = true;
             }
         }
