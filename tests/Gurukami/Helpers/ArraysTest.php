@@ -305,14 +305,26 @@ class ArraysTest extends \TestSuite
         $obj = self::getObj();
         $this->assertFalse(Arrays::save('unknown', $obj, 'unknown'));
 
+        $array = ['obj' => self::getObj()];
+        $this->assertFalse(Arrays::save('obj[2]', $array, 'unknown'));
+
         $int = self::getInt();
         $this->assertFalse(Arrays::save('unknown', $int, 'unknown'));
+
+        $array = ['int' => self::getInt()];
+        $this->assertFalse(Arrays::save('int[2]', $array, 'unknown'));
 
         $float = self::getFloat();
         $this->assertFalse(Arrays::save('unknown', $float, 'unknown'));
 
+        $array = ['float' => self::getFloat()];
+        $this->assertFalse(Arrays::save('float[2]', $array, 'unknown'));
+
         $res = self::getRes();
         $this->assertFalse(Arrays::save('unknown', $res, 'unknown'));
+
+        $array = ['res' => self::getRes()];
+        $this->assertFalse(Arrays::save('res[2]', $array, 'unknown'));
 
         // Broken quote
         $array = [];
@@ -322,7 +334,7 @@ class ArraysTest extends \TestSuite
         $array = [];
         $this->assertTrue(Arrays::save('"unknown\'', $array, 'unknown'));
         $this->assertEquals('unknown', $array['"unknown\'']);
-        
+
         // Replace value
         $array = [];
         $this->assertTrue(Arrays::save('inc', $array, '1'));
@@ -331,6 +343,11 @@ class ArraysTest extends \TestSuite
         $this->assertEquals('2', $array['inc']);
         $this->assertFalse(Arrays::save('inc[2]', $array, '2'));
         $this->assertEquals('2', $array['inc']);
+
+        // Save to null
+        $array = ['null' => null];
+        $this->assertTrue(Arrays::save('null[2]', $array, '2'));
+        $this->assertEquals('2', $array['null']['2']);
     }
 
     /**
@@ -358,7 +375,12 @@ class ArraysTest extends \TestSuite
                 'k2' => [
                     '0'
                 ]
-            ]
+            ],
+            'int' => self::getInt(),
+            'float' => self::getFloat(),
+            'obj' => self::getObj(),
+            'res' => self::getRes(),
+            'string' => self::getStr(),
         ];
 
         $emptyArray = [];
@@ -518,14 +540,30 @@ class ArraysTest extends \TestSuite
         $obj = self::getObj();
         $this->assertFalse(Arrays::delete('unknown', $obj));
 
+        $copyArray = $array;
+        $this->assertFalse(Arrays::delete('obj[1]', $copyArray));
+        $this->assertTrue(isset($copyArray['obj']));
+
         $int = self::getInt();
         $this->assertFalse(Arrays::delete('unknown', $int));
+
+        $copyArray = $array;
+        $this->assertFalse(Arrays::delete('int[1]', $copyArray));
+        $this->assertTrue(isset($copyArray['int']));
 
         $float = self::getFloat();
         $this->assertFalse(Arrays::delete('unknown', $float));
 
+        $copyArray = $array;
+        $this->assertFalse(Arrays::delete('float[1]', $copyArray));
+        $this->assertTrue(isset($copyArray['float']));
+
         $res = self::getRes();
         $this->assertFalse(Arrays::delete('unknown', $res));
+
+        $copyArray = $array;
+        $this->assertFalse(Arrays::delete('res[1]', $copyArray));
+        $this->assertTrue(isset($copyArray['res']));
 
         // Broken quote
         $this->assertFalse(Arrays::delete('["unknown\']', $array));
@@ -558,7 +596,12 @@ class ArraysTest extends \TestSuite
                     '0'
                 ]
             ],
-            '"quote\'' => 'quote'
+            '"quote\'' => 'quote',
+            'int' => self::getInt(),
+            'float' => self::getFloat(),
+            'obj' => self::getObj(),
+            'res' => self::getRes(),
+            'string' => self::getStr(),
         ];
 
         $emptyArray = [];
@@ -643,15 +686,19 @@ class ArraysTest extends \TestSuite
         // Other types
         $obj = self::getObj();
         $this->assertEquals('default', Arrays::get('unknown', $obj, 'default'));
+        $this->assertEquals('default', Arrays::get('obj[1]', $obj, 'default'));
 
         $int = self::getInt();
         $this->assertEquals('default', Arrays::get('unknown', $int, 'default'));
+        $this->assertEquals('default', Arrays::get('int[1]', $int, 'default'));
 
         $float = self::getFloat();
         $this->assertEquals('default', Arrays::get('unknown', $float, 'default'));
+        $this->assertEquals('default', Arrays::get('float[1]', $float, 'default'));
 
         $res = self::getRes();
         $this->assertEquals('default', Arrays::get('unknown', $res, 'default'));
+        $this->assertEquals('default', Arrays::get('res[1]', $res, 'default'));
 
         // Broken quote
         $this->assertEquals('quote', Arrays::get('["quote\']', $array));

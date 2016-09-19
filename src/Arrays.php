@@ -60,14 +60,25 @@ class Arrays
             $currEl = &$array;
             foreach ($parseInfo['keys'] as $key) {
                 if (!array_key_exists((string)$key, (array)$currEl)) {
+                    if (!$parseInfo['append'] && !is_array($currEl) && $currEl !== null) {
+                        $parseInfo['completed'] = false;
+                        break;
+                    }
                     $mCurSource[$key] = [];
+                } else {
+                    if (!$parseInfo['append'] && !is_array($currEl)) {
+                        $parseInfo['completed'] = false;
+                        break;
+                    }
                 }
                 $currEl = &$currEl[$key];
             }
-            if ($parseInfo['append']) {
-                $currEl[] = $value;
-            } else {
-                $currEl = $value;
+            if ($parseInfo['completed']) {
+                if ($parseInfo['append']) {
+                    $currEl[] = $value;
+                } else {
+                    $currEl = $value;
+                }
             }
         }
         return $parseInfo['completed'];
@@ -151,6 +162,7 @@ class Arrays
                     return '';
                 }
                 $parseInfo['append'] = false;
+                $parseInfo['keys'][] = $m['el'];
                 if ($parseInfo['isExists'] !== false) {
                     if (!is_array($parseInfo['currEl'])) {
                         $parseInfo['isExists'] = false;
@@ -168,7 +180,6 @@ class Arrays
                         $parseInfo['first'] = false;
                     }
                 }
-                $parseInfo['keys'][] = $m['el'];
                 return '';
             }, $key);
         if ($parseInfo['isExists'] === false && is_array($parseInfo['prevEl']) && is_string($parseInfo['currEl'])) {
@@ -187,8 +198,14 @@ class Arrays
             $parseInfo['completed'] = true;
         }
         if ($mode == 'save') {
-            if (!$parseInfo['isString'] && is_array($parseInfo['prevEl']) && $parseInfo['cntEBrackets'] <= 1) {
-                $parseInfo['completed'] = true;
+            if ($parseInfo['append']) {
+                if ($parseInfo['cntEBrackets'] == 1) {
+                    $parseInfo['completed'] = true;
+                }
+            } else {
+                if ($parseInfo['cntEBrackets'] == 0) {
+                    $parseInfo['completed'] = true;
+                }
             }
         }
         if ($parseInfo['isBroken']) {
