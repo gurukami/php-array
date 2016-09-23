@@ -348,6 +348,11 @@ class ArraysTest extends \TestSuite
         $array = ['null' => null];
         $this->assertTrue(Arrays::save('null[2]', $array, '2'));
         $this->assertEquals('2', $array['null']['2']);
+
+        // Replace if not exists
+        $array = ['exists' => 'value'];
+        $this->assertFalse(Arrays::save('exists', $array, 'something', false));
+        $this->assertEquals('value', $array['exists']);
     }
 
     /**

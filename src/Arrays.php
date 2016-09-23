@@ -39,10 +39,10 @@ class Arrays
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
      * @param array $array <p>The array. This array is passed by reference</p>
      * @param mixed $value <p>The current value</p>
-     *
+     * @param bool $replace [optional] <p>Replace exists value</p>
      * @return bool returns true if success, false otherwise
      */
-    public static function save($key, &$array, $value)
+    public static function save($key, &$array, $value, $replace = true)
     {
         if (!is_array($array)) {
             return false;
@@ -74,6 +74,9 @@ class Arrays
                 $currEl = &$currEl[$key];
             }
             if ($parseInfo['completed']) {
+                if(!$replace && $parseInfo['isExists']) {
+                    return false;
+                }
                 if ($parseInfo['append']) {
                     $currEl[] = $value;
                 } else {
@@ -138,7 +141,18 @@ class Arrays
         return ($parseInfo['completed'] && ($parseInfo['isExists'] || $parseInfo['isString'])) ? $parseInfo['value'] : $default;
     }
 
-    private static function parseAndValidateKeys($key, &$array = null, $mode = 'exists')
+    /**
+     * Parse string & validate passed array, if mode present do next
+     *  mode:
+     *      get - get value if exists
+     *      delete - unset existing element
+     *      save - additional conditions for completed state
+     * @param string $key <p>String representation of array element</p>
+     * @param array $array <p>The array, passed by reference for manipulating</p>
+     * @param string $mode [optional] <p>Mode action</p>
+     * @return array
+     */
+    private static function parseAndValidateKeys($key, &$array, $mode = '')
     {
         $parseInfo = [
             'keys' => [],

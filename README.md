@@ -5,7 +5,8 @@
 [![License](https://poser.pugx.org/gurukami/php-array/license.png)](https://packagist.org/packages/gurukami/php-array)
 [![Build Status](https://travis-ci.org/Gurukami/php-array.svg?branch=master)](https://travis-ci.org/Gurukami/php-array)
 
-Simple & secure helper to manipulate arrays in various ways, released under the MIT license.
+Simple & secure helper to manipulate arrays in various ways, especially for multidimensional arrays  
+Forget about checking for existing keys and E_NOTICE
 
 ## Usage
 
@@ -70,6 +71,9 @@ Arrays::save('"k4["', $data, 'v4'); // returns: false, can't save, bad syntax
 Arrays::save('k5', $data, []); // returns: true, create array 'k5' => []
 Arrays::save('k5[]', $data, 'v5-0'); // returns: true, append value to exists array 'k5' => [ 'v5-0' ]
 Arrays::save('k6[k6-1][]', $data, 'v6-1-0'); // returns: true, save as 'k6' => [ 'k6-1' => [ 'v6-1-0' ] ]
+
+// Replace if not exists
+Arrays::save('k2', $data, 'something', false); // returns false, value not replaced because value is exists
 ```
 
 **Delete** (Delete element from the array by a string representation)
