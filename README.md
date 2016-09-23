@@ -45,7 +45,7 @@ Arrays::exists('[k2][2]', $data); // returns: false
 
 **Save** (Save element to the array by a string representation)
 
-Arrays::save($key, &$array, $value)
+Arrays::save($key, &$array, $value, $replace = true)
 
 ```php
 <?php
