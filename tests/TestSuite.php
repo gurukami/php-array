@@ -27,6 +27,11 @@ class TestSuite extends \PHPUnit_Framework_TestCase
         return $res = fopen("php://temp", "a");
     }
 
+    public static function getClosure()
+    {
+        return function() {};
+    }
+
     public static function getObj()
     {
         static $obj = '';

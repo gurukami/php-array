@@ -123,6 +123,9 @@ class ArraysTest extends \TestSuite
         $res = self::getRes();
         $this->assertFalse(Arrays::exists('unknown', $res));
 
+        $res = self::getClosure();
+        $this->assertFalse(Arrays::exists('unknown', $res));
+
         // Broken quote
         $this->assertFalse(Arrays::exists('["unknown\']', $array));
         $this->assertFalse(Arrays::exists('"unknown\'', $array));
@@ -326,6 +329,9 @@ class ArraysTest extends \TestSuite
         $array = ['res' => self::getRes()];
         $this->assertFalse(Arrays::save('res[2]', $array, 'unknown'));
 
+        $array = ['closure' => self::getClosure()];
+        $this->assertFalse(Arrays::save('closure[2]', $array, 'unknown'));
+
         // Broken quote
         $array = [];
         $this->assertTrue(Arrays::save('["unknown\']', $array, 'unknown'));
@@ -386,6 +392,7 @@ class ArraysTest extends \TestSuite
             'obj' => self::getObj(),
             'res' => self::getRes(),
             'string' => self::getStr(),
+            'closure' => self::getClosure(),
         ];
 
         $emptyArray = [];
@@ -570,6 +577,13 @@ class ArraysTest extends \TestSuite
         $this->assertFalse(Arrays::delete('res[1]', $copyArray));
         $this->assertTrue(isset($copyArray['res']));
 
+        $res = self::getClosure();
+        $this->assertFalse(Arrays::delete('unknown', $res));
+
+        $copyArray = $array;
+        $this->assertFalse(Arrays::delete('closure[1]', $copyArray));
+        $this->assertTrue(isset($copyArray['closure']));
+
         // Broken quote
         $this->assertFalse(Arrays::delete('["unknown\']', $array));
         $this->assertFalse(Arrays::delete('"unknown\'', $array));
@@ -607,6 +621,7 @@ class ArraysTest extends \TestSuite
             'obj' => self::getObj(),
             'res' => self::getRes(),
             'string' => self::getStr(),
+            'closure' => self::getClosure(),
         ];
 
         $emptyArray = [];
@@ -705,8 +720,24 @@ class ArraysTest extends \TestSuite
         $this->assertEquals('default', Arrays::get('unknown', $res, 'default'));
         $this->assertEquals('default', Arrays::get('res[1]', $res, 'default'));
 
+        $res = self::getClosure();
+        $this->assertEquals('default', Arrays::get('unknown', $res, 'default'));
+        $this->assertEquals('default', Arrays::get('closure[1]', $res, 'default'));
+
         // Broken quote
         $this->assertEquals('quote', Arrays::get('["quote\']', $array));
         $this->assertEquals('quote', Arrays::get('"quote\'', $array));
+    }
+
+    /**
+     * @covers \Gurukami\Helpers\Arrays::shuffleAssoc
+     * @group helpers
+     */
+    public function testShuffleAssoc()
+    {
+        $data = ['First' => 1, 'Second' => 2, 'Third' => 4];
+        $out = Arrays::shuffleAssoc($data);
+
+        $this->assertArraySubset($data, $out);
     }
 }

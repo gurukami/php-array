@@ -139,6 +139,27 @@ Arrays::get('[k2][2]', $data, null, false); // returns: 'r'
 Arrays::get('[k2][null]', $data, null, false); // returns: null, offset isn't exists in string
 ```
 
+**Shuffle Assoc** (Shuffle the array with preserved keys)
+
+Arrays::shuffleAssoc($array)
+
+```php
+<?php
+
+// Don't forget require 'autoload.php' composer
+
+use \Gurukami\Helpers;
+
+$data = [
+    'k0' => 'v0',
+    'k1' => 'v1',
+    'k2' => 'v2'
+];
+
+Arrays::shuffleAssoc($data); // returns something like: ['k2' => 'v2', 'k1' => 'v1', 'k0' => 'v0']
+
+```
+
 ## Behaviors
 
 {method} - any method from class (exists,save,delete,get)
@@ -258,6 +279,5 @@ Arrays::{method}('key[subKey][subSubKey][subSubSubKey]', ...)
 
 ## License
 
-The MIT license
-
+The MIT license  
 Copyright (c) 2016 Gurukami, http://gurukami.com/

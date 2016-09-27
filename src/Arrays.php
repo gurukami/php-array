@@ -16,10 +16,8 @@ class Arrays
 {
     /**
      * Checks if the given key exists in the array by a string representation
-     *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
      * @param array $array <p>The array</p>
-     *
      * @return bool returns true if key is exists, false otherwise
      */
     public static function exists($key, $array)
@@ -35,7 +33,6 @@ class Arrays
 
     /**
      * Save element to the array by a string representation
-     *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
      * @param array $array <p>The array. This array is passed by reference</p>
      * @param mixed $value <p>The current value</p>
@@ -74,7 +71,7 @@ class Arrays
                 $currEl = &$currEl[$key];
             }
             if ($parseInfo['completed']) {
-                if(!$replace && $parseInfo['isExists']) {
+                if (!$replace && $parseInfo['isExists']) {
                     return false;
                 }
                 if ($parseInfo['append']) {
@@ -89,10 +86,8 @@ class Arrays
 
     /**
      * Delete element from the array by a string representation
-     *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
      * @param array $array <p>The array. This array is passed by reference</p>
-     *
      * @return bool returns true if success, false otherwise
      */
     public static function delete($key, &$array)
@@ -112,12 +107,10 @@ class Arrays
 
     /**
      * Get element of the array by a string representation
-     *
      * @param string $key <p>Name key in the array. Example: key[sub_key][sub_sub_key]</p>
      * @param array $array <p>The array</p>
      * @param string $default [optional] <p>Default value if key not exist, default: null</p>
      * @param bool $ignoreString [optional] <p>Ignore string element as array, get only element, default: true</p>
-     *
      * @return mixed returns value by a key, or default value otherwise
      */
     public static function get($key, $array, $default = null, $ignoreString = true)
@@ -139,6 +132,25 @@ class Arrays
             return (!$parseInfo['isString'] && $parseInfo['completed']) ? $parseInfo['value'] : $default;
         }
         return ($parseInfo['completed'] && ($parseInfo['isExists'] || $parseInfo['isString'])) ? $parseInfo['value'] : $default;
+    }
+
+    /**
+     * Shuffle the array with preserved keys
+     * @param array $array <p>The array</p>
+     * @return array|bool returns shuffled array if success, false otherwise
+     */
+    public static function shuffleAssoc($array)
+    {
+        if (!is_array($array)) {
+            return false;
+        }
+        $keys = array_keys($array);
+        shuffle($keys);
+        $random = [];
+        foreach ($keys as $key) {
+            $random[$key] = $array[$key];
+        }
+        return $random;
     }
 
     /**
