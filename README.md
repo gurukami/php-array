@@ -85,7 +85,7 @@ Arrays::delete($key, &$array)
 
 // Don't forget require 'autoload.php' composer
 
-use \Gurukami\Helpers;
+use \Gurukami\Helpers\Arrays;
 
 $data = [
     'k0' => 'v0',
@@ -113,7 +113,7 @@ Arrays::get($key, $array, $default = null, $ignoreString = true)
 
 // Don't forget require 'autoload.php' composer
 
-use \Gurukami\Helpers;
+use \Gurukami\Helpers\Arrays;
 
 $data = [
     'k0' => 'v0',
@@ -148,7 +148,7 @@ Arrays::shuffleAssoc($array)
 
 // Don't forget require 'autoload.php' composer
 
-use \Gurukami\Helpers;
+use \Gurukami\Helpers\Arrays;
 
 $data = [
     'k0' => 'v0',
