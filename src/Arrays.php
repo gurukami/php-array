@@ -201,7 +201,7 @@ class Arrays
                         if (!$parseInfo['first']) {
                             $parseInfo['prevEl'] = &$parseInfo['currEl'];
                         }
-                        $parseInfo['currEl'] = &$array[$m['el']];
+                        $parseInfo['currEl'] = &$parseInfo['currEl'][$m['el']];
                         $parseInfo['lastKey'] = $m['el'];
                         $parseInfo['first'] = false;
                     }
