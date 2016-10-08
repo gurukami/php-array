@@ -33,6 +33,8 @@ class ArraysTest extends \TestSuite
             3 => null
         ];
 
+        $copyArray = $array;
+
         $emptyArray = [];
         $nullArray = ['' => null];
         $string = 'string';
@@ -130,6 +132,8 @@ class ArraysTest extends \TestSuite
         $this->assertFalse(Arrays::exists('["unknown\']', $array));
         $this->assertFalse(Arrays::exists('"unknown\'', $array));
         $this->assertFalse(Arrays::exists('"unknown\'"""""\'\'\'\'', $array));
+
+        $this->assertSame($copyArray, $array);
     }
 
     /**
@@ -624,6 +628,8 @@ class ArraysTest extends \TestSuite
             'closure' => self::getClosure(),
         ];
 
+        $copyArray = $array;
+
         $emptyArray = [];
         $string = 'string';
 
@@ -727,6 +733,8 @@ class ArraysTest extends \TestSuite
         // Broken quote
         $this->assertEquals('quote', Arrays::get('["quote\']', $array));
         $this->assertEquals('quote', Arrays::get('"quote\'', $array));
+
+        $this->assertSame($copyArray, $array);
     }
 
     /**
